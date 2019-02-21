@@ -4,12 +4,10 @@ import android.content.Context;
 
 public class ChessBoard {
     private ChessPiece [][] chessBoard;
-    private int squareLength;
 
 
     public ChessBoard(Context context, int squareLength) {
         this.chessBoard = new ChessPiece[8][8];
-        this.squareLength = squareLength;
 
         chessBoard[0][7] = new ChessPiece(R.drawable.white_rook, ChessPiece.Piece.ROOK, ChessPiece.PieceColor.WHITE, context, 0*squareLength, 7*squareLength);
         chessBoard[7][7] = new ChessPiece(R.drawable.white_rook, ChessPiece.Piece.ROOK, ChessPiece.PieceColor.WHITE, context, 7*squareLength, 7*squareLength);
@@ -37,5 +35,13 @@ public class ChessBoard {
 
     public ChessPiece[][] getBoard() {
         return this.chessBoard;
+    }
+
+    public ChessPiece getPiece(int x, int y) {
+        return this.chessBoard[x][y];
+    }
+
+    public void setPiece(int x, int y, ChessPiece piece) {
+        this.chessBoard[x][y] = piece;
     }
 }

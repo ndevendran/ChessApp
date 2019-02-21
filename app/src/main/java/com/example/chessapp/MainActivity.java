@@ -9,12 +9,10 @@ import android.graphics.Paint;
 import android.content.Context;
 import android.view.Display;
 import android.graphics.Point;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Rect;
 import android.view.View;
 import android.view.MotionEvent;
 import android.util.Log;
+import com.example.chessapp.ChessPiece.PieceColor;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
@@ -24,11 +22,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     int screenHeight;
     int squareLength;
     ChessView chessView;
-    Canvas canvas;
     Boolean playingChess = true;
     ChessPiece activePiece;
     Point activePieceOldCoords = new Point();
     ChessMaster chessMaster;
+    ChessGraphics chessGraphics;
+    PieceColor currentTurn = PieceColor.WHITE;
 
 
     class ChessView extends SurfaceView implements Runnable {
@@ -42,61 +41,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             paint = new Paint();
             chessBoard = new ChessBoard(getApplicationContext(), squareLength);
             chessMaster = new ChessMaster(chessBoard);
+            chessGraphics = new ChessGraphics(squareLength);
         }
 
-        public void drawBoard() {
-            if(ourHolder.getSurface().isValid()) {
-                canvas = ourHolder.lockCanvas();
-
-                for(int i = 0; i<8; i++){
-                    int posLeft = squareLength*i;
-
-                    for(int j = 0; j<8; j++){
-                        int posTop = squareLength*j;
-
-                        if(i%2 == 0) {
-                            if(j%2 == 0) {
-                                paint.setColor(Color.rgb(255,255,255));
-                            } else {
-                                paint.setColor(Color.rgb(75,75,75));
-                            }
-                        } else {
-                            if(j%2 == 0) {
-                                paint.setColor(Color.rgb(75,75,75));
-                            } else {
-                                paint.setColor(Color.rgb(255,255,255));
-                            }
-                        }
 
 
-                        canvas.drawRect(posLeft,posTop,posLeft+squareLength,posTop+squareLength,paint);
 
-                    }
-                }
-
-                drawAllPieces();
-                ourHolder.unlockCanvasAndPost(canvas);
-            }
-        }
-
-        public void drawPiece(ChessPiece piece, Paint paint) {
-            int posLeft = piece.getPos().x;
-            int posTop = piece.getPos().y;
-            Rect rectToBeDrawn = new Rect(25,25,squareLength,squareLength);
-            Rect destRect = new Rect(posLeft,posTop, posLeft+squareLength, posTop+squareLength);
-            canvas.drawBitmap(piece.getSprite(), rectToBeDrawn, destRect, paint);
-        }
-
-        public void drawAllPieces() {
-            for(int i = 0; i<chessBoard.getBoard().length; i++) {
-                for(int j = 0; j<chessBoard.getBoard()[0].length; j++) {
-                    if(chessBoard.getBoard()[i][j] != null) {
-                        drawPiece(chessBoard.getBoard()[i][j], paint);
-                    }
-                }
-            }
-
-        }
 
         public void update() {
 
@@ -126,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         @Override
         public void run() {
             while(playingChess) {
-                drawBoard();
+                chessGraphics.drawBoard(chessBoard, ourHolder, paint);
                 update();
                 controlFPS();
             }
@@ -149,7 +99,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 activePieceOldCoords.x = (int)(floatX/squareLength);
                 activePieceOldCoords.y = (int)(floatY/squareLength);
                 if(activePieceOldCoords.x < chessBoard.getBoard().length && activePieceOldCoords.y < chessBoard.getBoard()[0].length){
-                    activePiece = chessBoard.getBoard()[activePieceOldCoords.x][activePieceOldCoords.y];
+                    activePiece = chessBoard.getPiece(activePieceOldCoords.x,activePieceOldCoords.y);
+                    if(activePiece != null && activePiece.getColor() != currentTurn) {
+                        activePiece = null;
+                    }
                 } else {
                     activePiece = null;
                 }
@@ -160,10 +113,9 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 if(activePiece != null) {
                     posX = (int)(motionEvent.getX()-(squareLength/2));
                     posY = (int)(motionEvent.getY()-(squareLength/2));
-                    //chessBoard.getBoard()[activePieceOldCoords.x][activePieceOldCoords.y].setPos(posX, posY);
 
                     if(posX < boardLength*squareLength && posY < boardLength*squareLength) {
-                        chessBoard.getBoard()[activePieceOldCoords.x][activePieceOldCoords.y].setPos(posX, posY);
+                        chessBoard.getPiece(activePieceOldCoords.x,activePieceOldCoords.y).setPos(posX, posY);
                     }
                 }
                 break;
@@ -179,12 +131,18 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         posX = indexX*squareLength;
                         posY = indexY*squareLength;
                         activePiece.setPos(posX, posY);
-                        chessBoard.getBoard()[indexX][indexY] = activePiece.clone();
-                        chessBoard.getBoard()[activePieceOldCoords.x][activePieceOldCoords.y] = null;
+                        chessBoard.setPiece(indexX,indexY,activePiece.clone());
+                        chessBoard.setPiece(activePieceOldCoords.x,activePieceOldCoords.y,null);
                         activePiece = null;
                     } else {
                         activePiece.setPos(activePieceOldCoords.x*squareLength, activePieceOldCoords.y*squareLength);
                         activePiece = null;
+                    }
+
+                    if(currentTurn == PieceColor.WHITE) {
+                        currentTurn = PieceColor.BLACK;
+                    } else {
+                        currentTurn = PieceColor.WHITE;
                     }
                 }
                 break;
