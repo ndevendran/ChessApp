@@ -128,21 +128,34 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                     Log.i("Index X", Integer.toString(indexX));
                     Log.i("Index Y", Integer.toString(indexY));
                     if(indexX < chessBoard.getBoard().length && indexY < chessBoard.getBoard()[0].length && isValidMove) {
-                        posX = indexX*squareLength;
-                        posY = indexY*squareLength;
-                        activePiece.setPos(posX, posY);
-                        chessBoard.setPiece(indexX,indexY,activePiece.clone());
-                        chessBoard.setPiece(activePieceOldCoords.x,activePieceOldCoords.y,null);
-                        activePiece = null;
+                        if(indexX != activePieceOldCoords.x || indexY != activePieceOldCoords.y){
+                            posX = indexX*squareLength;
+                            posY = indexY*squareLength;
+                            activePiece.setPos(posX, posY);
+                            chessBoard.setPiece(indexX,indexY,activePiece.clone());
+                            chessBoard.setPiece(activePieceOldCoords.x,activePieceOldCoords.y,null);
+                            activePiece = null;
+
+                            if(currentTurn == PieceColor.WHITE) {
+                                if(!chessMaster.isCheckmate(PieceColor.WHITE)){
+                                    currentTurn = PieceColor.BLACK;
+                                } else {
+                                    //Reset Game here
+                                    Log.i("Checkmate! WHITE WINS", "Checkmate! WHITE WINS");
+                                }
+                            } else {
+                                if(!chessMaster.isCheckmate(PieceColor.WHITE)){
+                                    currentTurn = PieceColor.WHITE;
+                                } else {
+                                    //Reset Game here
+                                    Log.i("Checkmate! BLACK WINS", "Checkmate! BLACK WINS");
+                                }
+
+                            }
+                        }
                     } else {
                         activePiece.setPos(activePieceOldCoords.x*squareLength, activePieceOldCoords.y*squareLength);
                         activePiece = null;
-                    }
-
-                    if(currentTurn == PieceColor.WHITE) {
-                        currentTurn = PieceColor.BLACK;
-                    } else {
-                        currentTurn = PieceColor.WHITE;
                     }
                 }
                 break;

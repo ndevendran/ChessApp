@@ -41,12 +41,42 @@ public class ChessMaster {
             }
         }
 
+        chessBoard.setPiece(newX, newY, movingPiece);
+        chessBoard.setPiece(oldX, oldY, null);
 
-        if(doesMovePutOurKingInCheck(oldX, oldY, newX, newY)) {
-            return false;
+        if(movingPiece.getColor() == PieceColor.BLACK) {
+            if(movingPiece.getPiece() == Piece.KING) {
+                if(isKingInCheck(newX, newY)){
+                    chessBoard.setPiece(oldX, oldY, movingPiece);
+                    chessBoard.setPiece(newX, newY, targetPiece);
+                    return false;
+                }
+            }
+            else if(isKingInCheck(blackKingPos.x, blackKingPos.y)){
+                chessBoard.setPiece(oldX, oldY, movingPiece);
+                chessBoard.setPiece(newX, newY, targetPiece);
+                return false;
+            }
+        } else {
+            if(movingPiece.getPiece() == Piece.KING) {
+                if(isKingInCheck(newX, newY)){
+                    chessBoard.setPiece(oldX, oldY, movingPiece);
+                    chessBoard.setPiece(newX, newY, targetPiece);
+                    return false;
+                }
+            }
+            else if(isKingInCheck(whiteKingPos.x, whiteKingPos.y)){
+                chessBoard.setPiece(oldX, oldY, movingPiece);
+                chessBoard.setPiece(newX, newY, targetPiece);
+                return false;
+            }
         }
 
+        chessBoard.setPiece(oldX, oldY, movingPiece);
+        chessBoard.setPiece(newX, newY, targetPiece);
+
         //TODO: PAWN CAPTURES/FORMAL CAPTURING
+        //TODO: IF LET GO OF PIECE WHERE IT WAS AT DON'T COUNT AS MOVE
         //TODO: CHECK FOR CHECKS AND CHECKMATE
 
         switch(movingPiece.getPiece()){
@@ -59,7 +89,6 @@ public class ChessMaster {
             case ROOK:
                 return validateRookMove(newX, newY, oldX, oldY);
             case BISHOP:
-                Log.i("Made it", "Made it to bishop check");
                 return validateBishopMove(newX, newY, oldX, oldY);
             case QUEEN:
                 return validateQueenMove(newX, newY, oldX, oldY);
@@ -153,6 +182,7 @@ public class ChessMaster {
         }
 
         if(changeY > 0 && piece.getColor() != ChessPiece.PieceColor.BLACK) {
+
             return false;
         }
 
@@ -301,15 +331,19 @@ public class ChessMaster {
     private boolean isKingInCheck(int kingX, int kingY){
         //TODO CHECK IF IN LINE OF SIGHT
         //TODO CHECK IF PIECE BLOCKING
+        ChessPiece kingPiece = chessBoard.getPiece(kingX, kingY);
+        Log.i("isKingInCheckCalled: King X and Y", "X: " + Integer.toString(kingX) + " Y: " + Integer.toString(kingY));
+        Log.i("isKingInCheck: King piece", kingPiece.getColor().toString());
         for(int i = 0; i < chessBoard.getBoard().length; i++) {
             for(int j = 0; j < chessBoard.getBoard()[0].length; j++){
                 ChessPiece attackingPiece = chessBoard.getPiece(i,j);
-                if(attackingPiece == null) {
+                if(attackingPiece == null || attackingPiece.getColor() == kingPiece.getColor()) {
                     continue;
                 }
-                int attX = attackingPiece.getPos().x;
-                int attY = attackingPiece.getPos().y;
-                if(isValidMove(attX, attY, kingX, kingY)){
+                int attX = i;
+                int attY = j;
+                if(validateAttack(attX, attY, kingX, kingY)){
+                    Log.i("Attacking Piece", attackingPiece.getPiece().toString());
                     Log.i("King in Check", "King is in check");
                     return true;
                 }
@@ -319,31 +353,79 @@ public class ChessMaster {
         return false;
     }
 
-    private boolean doesMovePutOurKingInCheck(int oldX, int oldY, int newX, int newY) {
-        ChessPiece movingPiece = chessBoard.getPiece(oldX, oldY);
-        ChessPiece pieceAtDestination = chessBoard.getPiece(newX, newY);
-        int kingX;
-        int kingY;
+    private boolean validateAttack(int attX, int attY, int targetX, int targetY) {
+        ChessPiece movingPiece = chessBoard.getPiece(attX, attY);
+        ChessPiece targetPiece = chessBoard.getPiece(targetX, targetY);
 
-        chessBoard.setPiece(newX, newY, movingPiece);
-        chessBoard.setPiece(oldX, oldY, null);
-
-
-        if(movingPiece.getColor() == PieceColor.BLACK) {
-            kingX = blackKingPos.x;
-            kingY = blackKingPos.y;
-        }else {
-            kingX = whiteKingPos.x;
-            kingY = whiteKingPos.y;
+        if(targetPiece != null) {
+            if(targetPiece.getColor() == movingPiece.getColor()) {
+                return false;
+            }
         }
 
-        boolean result = isKingInCheck(kingX, kingY);
-
-        chessBoard.setPiece(oldX, oldY, movingPiece);
-        chessBoard.setPiece(newX, newY, pieceAtDestination);
-
-        return result;
+        switch(movingPiece.getPiece()){
+            case KNIGHT:
+                return validateKnightMove(targetX, targetY, attX, attY);
+            case KING:
+                return validateKingAttack(targetX, targetY, attX, attY);
+            case PAWN:
+                return validatePawnAttack(targetX, targetY, attX, attY);
+            case ROOK:
+                return validateRookMove(targetX, targetY, attX, attY);
+            case BISHOP:
+                return validateBishopMove(targetX, targetY, attX, attY);
+            case QUEEN:
+                return validateQueenMove(targetX, targetY, attX, attY);
+            default:
+                return false;
+        }
     }
+
+    private boolean validatePawnAttack(int targetX, int targetY, int attX, int attY) {
+        int changeY = targetY-attY;
+        int changeX = targetX-attX;
+        ChessPiece piece = chessBoard.getPiece(attX, attY);
+
+        if(piece.getColor() == PieceColor.WHITE){
+            if(changeY == -1 && (changeX == -1 || changeX == 1)){
+                return true;
+            }
+        } else {
+            if(changeY == 1 && (changeX == 1 || changeX == -1)){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean validateKingAttack(int newX, int newY, int oldX, int oldY) {
+        int changeX = newX-oldX;
+        int changeY = newY-oldY;
+
+        if(changeX < 0) {
+            changeX = changeX * -1;
+        }
+
+        if(changeY < 0) {
+            changeY = changeY * -1;
+        }
+
+        if(changeX > 1 || changeY > 1) {
+            return false;
+        }
+
+        ChessPiece targetPiece = chessBoard.getPiece(newX,newY);
+        ChessPiece movingPiece = chessBoard.getPiece(oldX,oldY);
+        if(targetPiece != null) {
+            if(targetPiece.getColor() == movingPiece.getColor()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
 
     private boolean canKingMove(int kingX, int kingY) {
         int [] possibleXs = new int[]{kingX-1, kingX, kingX+1};
@@ -351,10 +433,11 @@ public class ChessMaster {
 
         for(int i = 0; i < possibleXs.length; i++) {
             for (int j = 0; j < possibleYs.length; j++) {
-                if(isValidMove(kingX, kingY, possibleXs[i], possibleYs[j])) {
-                    return true;
+                if(possibleXs[i] < 8 && possibleXs[i] >= 0 && possibleYs[j] < 8 && possibleYs[j] >= 0){
+                    if(isValidMove(kingX, kingY, possibleXs[i], possibleYs[j])) {
+                        return true;
+                    }
                 }
-
             }
         }
 
@@ -382,7 +465,7 @@ public class ChessMaster {
     }
 
     private boolean canAttackerBeBlocked(ChessPiece attackingPiece, int attX, int attY, int kingX, int kingY){
-        boolean canBeBlocked = false;
+        boolean canBeBlocked;
         switch(attackingPiece.getPiece()) {
             case BISHOP:
                 canBeBlocked = canBishopBeBlocked(attX, attY, kingX, kingY);
@@ -403,6 +486,7 @@ public class ChessMaster {
     private boolean canBishopBeBlocked(int attX, int attY, int kingX, int kingY) {
         int xTrack = attX;
         int yTrack = attY;
+        ChessPiece kingPiece = chessBoard.getPiece(kingX, kingY);
 
         while(xTrack != kingX && yTrack != kingY) {
             if(xTrack < kingX) {
@@ -419,7 +503,8 @@ public class ChessMaster {
 
             for(int i = 0; i<chessBoard.getBoard().length; i++) {
                 for(int j = 0; j<chessBoard.getBoard().length; j++) {
-                    if(isValidMove(i, j, xTrack, yTrack)) {
+                    ChessPiece movingPiece = chessBoard.getPiece(i, j);
+                    if(isValidMove(i, j, xTrack, yTrack) && (kingPiece.getColor() == movingPiece.getColor())) {
                         return true;
                     }
                 }
@@ -477,7 +562,7 @@ public class ChessMaster {
         }
     }
 
-    private boolean isItCheckmate(PieceColor color){
+    public boolean isCheckmate(PieceColor color){
         //TODO
         int kingX;
         int kingY;
@@ -490,10 +575,14 @@ public class ChessMaster {
             kingY = blackKingPos.y;
         }
 
+        Log.i("isCheckmateCalled: King Pos X", Integer.toString(kingX));
+        Log.i("isCheckmateCalled: King Pos Y", Integer.toString(kingY));
+
         boolean canKingMove = canKingMove(kingX, kingY);
         boolean canCheckBeBlocked = canCheckBeBlocked(kingX, kingY);
+        boolean isKingInCheck = isKingInCheck(kingX, kingY);
 
-        return !(canKingMove || canCheckBeBlocked);
+        return (isKingInCheck && !(canKingMove || canCheckBeBlocked));
     }
 
     private boolean isItStalemate(PieceColor color) {

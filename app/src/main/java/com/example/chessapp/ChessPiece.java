@@ -65,4 +65,9 @@ public class ChessPiece {
         return new ChessPiece(this.sprite, this.piece, this.color, this.pos.x, this.pos.y);
     }
 
+    public boolean isValidMove(int newX, int newY, ChessBoard chessBoard) {
+        //Need to overwrite in extending classes
+        return false;
+    }
+
 }
