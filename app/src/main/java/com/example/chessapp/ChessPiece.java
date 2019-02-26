@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.content.res.Resources;
 import android.content.Context;
 import android.graphics.Point;
+import android.util.Log;
 
 public class ChessPiece {
 
@@ -67,6 +68,7 @@ public class ChessPiece {
 
     public boolean isValidMove(int oldX, int oldY, int newX, int newY, ChessBoard chessBoard) {
         //Need to overwrite in extending classes
+        Log.i("Strange behavior", "real strange");
         return false;
     }
 

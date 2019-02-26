@@ -20,6 +20,10 @@ public class PawnPiece extends ChessPiece {
         ChessPiece movingPiece = chessBoard.getPiece(oldX, oldY);
         ChessPiece targetPiece = chessBoard.getPiece(newX, newY);
 
+        if(targetPiece == null){
+            return false;
+        }
+
         if(movingPiece.getColor() != targetPiece.getColor() && validatePawnAttack(oldX, oldY, newX, newY, chessBoard)) {
             return true;
         }

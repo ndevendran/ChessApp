@@ -125,14 +125,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                     indexX = (int)(motionEvent.getX()/squareLength);
                     indexY = (int)(motionEvent.getY()/squareLength);
                     boolean isValidMove = chessMaster.isValidMove(activePieceOldCoords.x, activePieceOldCoords.y, indexX, indexY);
-                    Log.i("Index X", Integer.toString(indexX));
-                    Log.i("Index Y", Integer.toString(indexY));
                     if(indexX < chessBoard.getBoard().length && indexY < chessBoard.getBoard()[0].length && isValidMove) {
                         if(indexX != activePieceOldCoords.x || indexY != activePieceOldCoords.y){
                             posX = indexX*squareLength;
                             posY = indexY*squareLength;
                             activePiece.setPos(posX, posY);
-                            chessBoard.setPiece(indexX,indexY,activePiece.clone());
+                            chessBoard.setPiece(indexX,indexY,activePiece);
                             chessBoard.setPiece(activePieceOldCoords.x,activePieceOldCoords.y,null);
                             activePiece = null;
 

@@ -7,12 +7,11 @@ import com.example.chessapp.ChessPiece.Piece;
 
 
 public class ChessMaster {
-    ChessBoard chessBoard;
+    public ChessBoard chessBoard;
     Point blackKingPos;
     Point whiteKingPos;
 
     public boolean isValidMove(int oldX, int oldY, int newX, int newY) {
-        boolean isOurKingCurrentlyInCheck;
         boolean isValidPieceMove;
         boolean putsOurKingInCheck;
 
@@ -48,17 +47,29 @@ public class ChessMaster {
             }
         }
 
-        if(movingPiece.getColor() == PieceColor.BLACK) {
-            isOurKingCurrentlyInCheck = isKingInCheck(blackKingPos.x, blackKingPos.y);
-        } else {
-            isOurKingCurrentlyInCheck = isKingInCheck(whiteKingPos.x, whiteKingPos.y);
-        }
-
-        isValidPieceMove = movingPiece.isValidMove(oldX, oldY, newX, newY, chessBoard);
+        isValidPieceMove = (movingPiece.isValidMove(oldX, oldY, newX, newY, chessBoard) || movingPiece.isValidAttack(oldX, oldY, newX, newY, chessBoard));
 
         putsOurKingInCheck = doesMovePutOurKingInCheck(oldX, oldY, newX, newY);
 
-        return (!isOurKingCurrentlyInCheck && isValidPieceMove && !putsOurKingInCheck);
+        if(putsOurKingInCheck) {
+            return false;
+        }
+
+        if(!isValidPieceMove) {
+            return false;
+        }
+
+        if(movingPiece.getPiece() == Piece.KING) {
+            if(movingPiece.getColor() == PieceColor.BLACK){
+                blackKingPos.x = newX;
+                blackKingPos.y = newY;
+            } else {
+                whiteKingPos.x = newX;
+                whiteKingPos.y = newY;
+            }
+        }
+
+        return true;
     }
 
     public ChessMaster(ChessBoard chessBoard) {
@@ -74,10 +85,11 @@ public class ChessMaster {
     }
 
     private boolean isKingInCheck(int kingX, int kingY){
+        ChessPiece kingPiece = chessBoard.getPiece(kingX, kingY);
         for(int i = 0; i < chessBoard.getBoard().length; i++) {
             for(int j = 0; j < chessBoard.getBoard()[0].length; j++){
                 ChessPiece attackingPiece = chessBoard.getPiece(i,j);
-                ChessPiece kingPiece = chessBoard.getPiece(kingX, kingY);
+
                 if(attackingPiece == null) {
                     continue;
                 }
@@ -136,12 +148,20 @@ public class ChessMaster {
         chessBoard.setPiece(newX, newY, movingPiece);
         chessBoard.setPiece(oldX, oldY, null);
         if(movingPiece.getColor() == PieceColor.BLACK) {
-            if(isKingInCheck(blackKingPos.x, blackKingPos.y)){
-                kingInCheck = true;
+            if(movingPiece.getPiece() != Piece.KING) {
+                if(isKingInCheck(blackKingPos.x, blackKingPos.y)){
+                    kingInCheck = true;
+                }
+            } else {
+                isKingInCheck(newX, newY);
             }
         } else {
-            if(isKingInCheck(whiteKingPos.x, whiteKingPos.y)) {
-                kingInCheck = true;
+            if(movingPiece.getPiece() != Piece.KING) {
+                if(isKingInCheck(whiteKingPos.x, whiteKingPos.y)) {
+                    kingInCheck = true;
+                }
+            } else {
+                isKingInCheck(newX, newY);
             }
         }
 
