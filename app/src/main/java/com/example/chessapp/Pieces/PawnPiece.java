@@ -1,4 +1,4 @@
-package com.example.chessapp.com.example.chessapp.pieces;
+package com.example.chessapp.Pieces;
 
 import android.content.Context;
 
@@ -13,6 +13,36 @@ public class PawnPiece extends ChessPiece {
     @Override
     public boolean isValidMove(int oldX, int oldY, int newX, int newY, ChessBoard chessBoard){
         return validatePawnMove(newX, newY, oldX, oldY, chessBoard);
+    }
+
+    @Override
+    public boolean isValidAttack(int oldX, int oldY, int newX, int newY, ChessBoard chessBoard){
+        ChessPiece movingPiece = chessBoard.getPiece(oldX, oldY);
+        ChessPiece targetPiece = chessBoard.getPiece(newX, newY);
+
+        if(movingPiece.getColor() != targetPiece.getColor() && validatePawnAttack(oldX, oldY, newX, newY, chessBoard)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean validatePawnAttack(int targetX, int targetY, int attX, int attY, ChessBoard chessBoard) {
+        int changeY = targetY-attY;
+        int changeX = targetX-attX;
+        ChessPiece piece = chessBoard.getPiece(attX, attY);
+
+        if(piece.getColor() == PieceColor.WHITE){
+            if(changeY == -1 && (changeX == -1 || changeX == 1)){
+                return true;
+            }
+        } else {
+            if(changeY == 1 && (changeX == 1 || changeX == -1)){
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private boolean validatePawnMove(int newX, int newY, int oldX, int oldY, ChessBoard chessBoard) {

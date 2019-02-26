@@ -1,4 +1,4 @@
-package com.example.chessapp.com.example.chessapp.pieces;
+package com.example.chessapp.Pieces;
 
 import android.content.Context;
 
@@ -13,6 +13,101 @@ public class QueenPiece extends ChessPiece {
     @Override
     public boolean isValidMove(int oldX, int oldY, int newX, int newY, ChessBoard chessBoard){
         return (validateBishopMove(newX, newY, oldX, oldY, chessBoard) || validateRookMove(newX, newY, oldX, oldY, chessBoard));
+    }
+
+    @Override
+    public boolean isValidAttack(int oldX, int oldY, int newX, int newY, ChessBoard chessBoard){
+        ChessPiece movingPiece = chessBoard.getPiece(oldX, oldY);
+        ChessPiece targetPiece = chessBoard.getPiece(newX, newY);
+
+        if(movingPiece.getColor() != targetPiece.getColor() && isValidMove(oldX, oldY, newX, newY, chessBoard)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean canAttackBeBlocked(int attX, int attY, int targetX, int targetY, ChessBoard chessBoard) {
+        if((attX == targetX && attY != targetY) || (attX != targetX && attY == targetY)) {
+            return canRookBeBlocked(attX, attY, targetX, targetY, chessBoard);
+        } else {
+            return canBishopBeBlocked(attX, attY, targetX, targetY, chessBoard);
+        }
+    }
+
+
+    private boolean canRookBeBlocked(int attX, int attY, int kingX, int kingY, ChessBoard chessBoard) {
+        boolean x = false;
+        boolean y = true;
+        ChessPiece kingPiece = chessBoard.getPiece(kingX, kingY);
+
+        if(attY == kingY) {
+            y = false;
+            x = true;
+        }
+
+        while((x && attX != kingX) || (y && attY != kingY)) {
+            if(x) {
+                if(attX < kingX) {
+                    attX++;
+                } else {
+                    attX--;
+                }
+            }
+
+            if(y) {
+                if(attY < kingY) {
+                    attY++;
+                } else {
+                    attY--;
+                }
+            }
+
+            for(int i = 0; i < chessBoard.getBoard().length; i++){
+                for(int j = 0; j < chessBoard.getBoard().length; j++){
+                    ChessPiece blockingPiece = chessBoard.getPiece(i,j);
+                    if(blockingPiece.isValidMove(i, j, attX, attY, chessBoard) && (blockingPiece.getColor() == kingPiece.getColor())) {
+                        return true;
+                    }
+                }
+            }
+
+        }
+
+        return false;
+
+    }
+
+    private boolean canBishopBeBlocked(int attX, int attY, int kingX, int kingY, ChessBoard chessBoard) {
+        int xTrack = attX;
+        int yTrack = attY;
+        ChessPiece kingPiece = chessBoard.getPiece(kingX, kingY);
+
+        while(xTrack != kingX && yTrack != kingY) {
+            if(xTrack < kingX) {
+                xTrack++;
+            } else {
+                xTrack--;
+            }
+
+            if(yTrack < kingY) {
+                yTrack++;
+            } else {
+                yTrack--;
+            }
+
+            for(int i = 0; i<chessBoard.getBoard().length; i++) {
+                for(int j = 0; j<chessBoard.getBoard().length; j++) {
+                    ChessPiece movingPiece = chessBoard.getPiece(i, j);
+                    if(movingPiece.isValidMove(i, j, xTrack, yTrack, chessBoard) && (kingPiece.getColor() == movingPiece.getColor())) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     private boolean validateRookMove(int newX, int newY, int oldX, int oldY, ChessBoard chessBoard) {

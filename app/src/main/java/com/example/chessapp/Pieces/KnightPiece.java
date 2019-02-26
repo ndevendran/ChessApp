@@ -1,4 +1,4 @@
-package com.example.chessapp.com.example.chessapp.pieces;
+package com.example.chessapp.Pieces;
 
 import android.content.Context;
 
@@ -13,6 +13,18 @@ public class KnightPiece extends ChessPiece {
     @Override
     public boolean isValidMove(int oldX, int oldY, int newX, int newY, ChessBoard chessBoard){
         return validateKnightMove(newX, newY, oldX, oldY);
+    }
+
+    @Override
+    public boolean isValidAttack(int oldX, int oldY, int newX, int newY, ChessBoard chessBoard){
+        ChessPiece movingPiece = chessBoard.getPiece(oldX, oldY);
+        ChessPiece targetPiece = chessBoard.getPiece(newX, newY);
+
+        if(movingPiece.getColor() != targetPiece.getColor() && isValidMove(oldX, oldY, newX, newY, chessBoard)) {
+            return true;
+        }
+
+        return false;
     }
 
     private boolean validateKnightMove(int newX, int newY, int oldX, int oldY) {

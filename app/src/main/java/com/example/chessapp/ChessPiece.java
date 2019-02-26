@@ -70,4 +70,14 @@ public class ChessPiece {
         return false;
     }
 
+    public boolean isValidAttack(int oldX, int oldY, int newX, int newY, ChessBoard chessBoard) {
+        //Need to overwrite in extending classes
+        return false;
+    }
+
+    public boolean canAttackBeBlocked(int attX, int attY, int targetX, int targetY, ChessBoard chessBoard) {
+        //Need to overwrite in extending classes
+        return false;
+    }
+
 }

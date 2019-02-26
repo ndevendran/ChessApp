@@ -137,14 +137,16 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                             activePiece = null;
 
                             if(currentTurn == PieceColor.WHITE) {
-                                if(!chessMaster.isCheckmate(PieceColor.WHITE)){
+                                //CHECK FOR CHECKMATE DOWN IN THIS IF STATEMENT
+                                if(true){
                                     currentTurn = PieceColor.BLACK;
                                 } else {
                                     //Reset Game here
                                     Log.i("Checkmate! WHITE WINS", "Checkmate! WHITE WINS");
                                 }
                             } else {
-                                if(!chessMaster.isCheckmate(PieceColor.WHITE)){
+                                //CHECK FOR CHECKMATE DOWN IN THIS IF STATEMENT
+                                if(true){
                                     currentTurn = PieceColor.WHITE;
                                 } else {
                                     //Reset Game here
