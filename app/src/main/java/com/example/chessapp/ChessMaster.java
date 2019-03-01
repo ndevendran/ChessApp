@@ -2,7 +2,6 @@ package com.example.chessapp;
 
 import android.graphics.Point;
 import com.example.chessapp.ChessPiece.PieceColor;
-import android.util.Log;
 import com.example.chessapp.ChessPiece.Piece;
 
 
@@ -10,6 +9,7 @@ public class ChessMaster {
     public ChessBoard chessBoard;
     Point blackKingPos;
     Point whiteKingPos;
+    StateOfTheGame stateOfGame;
 
     public boolean isValidMove(int oldX, int oldY, int newX, int newY) {
         boolean isValidPieceMove;
@@ -74,14 +74,10 @@ public class ChessMaster {
 
     public ChessMaster(ChessBoard chessBoard) {
         this.chessBoard = chessBoard;
-        blackKingPos = new Point();
-        whiteKingPos = new Point();
+        blackKingPos = chessBoard.getPieceCoords(Piece.KING, PieceColor.BLACK);
+        whiteKingPos = chessBoard.getPieceCoords(Piece.KING, PieceColor.WHITE);
 
-        blackKingPos.x = 4;
-        blackKingPos.y = 0;
-
-        whiteKingPos.x = 4;
-        whiteKingPos.y = 7;
+        this.stateOfGame = new StateOfTheGame();
     }
 
     private boolean isKingInCheck(int kingX, int kingY){
@@ -196,5 +192,20 @@ public class ChessMaster {
         //canKingMove();
         //areThereAnyValidMovesForTheOtherPieces
         return false;
+    }
+
+    public StateOfTheGame makeMove(int oldX, int oldY, int newX, int newY){
+        if(isValidMove(oldX, oldY, newX, newY)){
+            ChessPiece movingPiece = chessBoard.getPiece(oldX,oldY);
+            chessBoard.setPiece(newX, newY, movingPiece);
+            chessBoard.setPiece(oldX, oldY, null);
+
+            stateOfGame.nextTurn();
+        }
+
+        stateOfGame.setChessBoardView(stateOfGame.createChessBoardView(chessBoard));
+
+        return stateOfGame;
+
     }
 }

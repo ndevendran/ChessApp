@@ -6,8 +6,8 @@ import com.example.chessapp.ChessBoard;
 import com.example.chessapp.ChessPiece;
 
 public class KnightPiece extends ChessPiece {
-    public KnightPiece (int resourceId, int squareLength, PieceColor color, Context context, int i, int j){
-        super(resourceId, ChessPiece.Piece.KNIGHT, color, context, i*squareLength, j*squareLength);
+    public KnightPiece (PieceColor color, int i, int j){
+        super(ChessPiece.Piece.KNIGHT, color, i, j);
     }
 
     @Override

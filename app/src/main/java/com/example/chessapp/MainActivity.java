@@ -11,23 +11,26 @@ import android.view.Display;
 import android.graphics.Point;
 import android.view.View;
 import android.view.MotionEvent;
-import android.util.Log;
 import com.example.chessapp.ChessPiece.PieceColor;
+import com.example.chessapp.View.ChessBoardView;
+import com.example.chessapp.View.ChessPieceView;
+import android.util.Log;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
-
     ChessBoard chessBoard;
     int screenWidth;
     int screenHeight;
     int squareLength;
     ChessView chessView;
     Boolean playingChess = true;
-    ChessPiece activePiece;
-    Point activePieceOldCoords = new Point();
+    Point activePieceViewCoords = new Point();
     ChessMaster chessMaster;
     ChessGraphics chessGraphics;
     PieceColor currentTurn = PieceColor.WHITE;
+    StateOfTheGame stateOfGame = new StateOfTheGame();
+    ChessBoardView chessBoardView;
+    ChessPieceView holdingPiece;
 
 
     class ChessView extends SurfaceView implements Runnable {
@@ -39,14 +42,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             super(context);
             ourHolder = getHolder();
             paint = new Paint();
-            chessBoard = new ChessBoard(getApplicationContext(), squareLength);
+            chessBoard = new ChessBoard();
             chessMaster = new ChessMaster(chessBoard);
+            chessBoardView = stateOfGame.createChessBoardView(chessBoard);
+            chessBoardView.scaleAllPositions(squareLength);
             chessGraphics = new ChessGraphics(squareLength);
         }
-
-
-
-
 
         public void update() {
 
@@ -76,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         @Override
         public void run() {
             while(playingChess) {
-                chessGraphics.drawBoard(chessBoard, ourHolder, paint);
+                chessGraphics.drawBoard(chessBoardView, ourHolder, paint, getContext());
                 update();
                 controlFPS();
             }
@@ -96,66 +97,57 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 float floatX = motionEvent.getX();
                 float floatY = motionEvent.getY();
 
-                activePieceOldCoords.x = (int)(floatX/squareLength);
-                activePieceOldCoords.y = (int)(floatY/squareLength);
-                if(activePieceOldCoords.x < chessBoard.getBoard().length && activePieceOldCoords.y < chessBoard.getBoard()[0].length){
-                    activePiece = chessBoard.getPiece(activePieceOldCoords.x,activePieceOldCoords.y);
-                    if(activePiece != null && activePiece.getColor() != currentTurn) {
-                        activePiece = null;
-                    }
-                } else {
-                    activePiece = null;
+                activePieceViewCoords.x = (int)((floatX)/squareLength);
+                activePieceViewCoords.y = (int)((floatY)/squareLength);
+
+                holdingPiece = chessBoardView.getPiece(activePieceViewCoords.x, activePieceViewCoords.y);
+
+                if(holdingPiece == null) {
+                }
+
+                if(holdingPiece != null && holdingPiece.getPieceColor() != currentTurn) {
+                    holdingPiece = null;
                 }
 
                 break;
 
             case MotionEvent.ACTION_MOVE:
-                if(activePiece != null) {
+                if(holdingPiece != null) {
                     posX = (int)(motionEvent.getX()-(squareLength/2));
                     posY = (int)(motionEvent.getY()-(squareLength/2));
 
-                    if(posX < boardLength*squareLength && posY < boardLength*squareLength) {
-                        chessBoard.getPiece(activePieceOldCoords.x,activePieceOldCoords.y).setPos(posX, posY);
+                    int borderXRight = (int)((motionEvent.getX()+squareLength)/squareLength);
+                    int borderYBottom = (int)((motionEvent.getY()+squareLength)/squareLength);
+                    int borderXLeft = (int)(motionEvent.getX()/squareLength);
+                    int borderYTop = (int)(motionEvent.getY()/squareLength);
+
+                    if(borderXRight > chessBoardView.getChessBoard().length || borderYBottom > chessBoardView.getChessBoard()[0].length) {
+                        //do nothing
+                    } else if(borderXLeft < 0 || borderYTop < 0) {
+                        //do nothing again
+                    } else {
+                        holdingPiece.setPos(posX, posY);
                     }
+
                 }
+
                 break;
 
             case MotionEvent.ACTION_UP:
-                if(activePiece != null) {
+                if(holdingPiece != null) {
                     indexX = (int)(motionEvent.getX()/squareLength);
                     indexY = (int)(motionEvent.getY()/squareLength);
-                    boolean isValidMove = chessMaster.isValidMove(activePieceOldCoords.x, activePieceOldCoords.y, indexX, indexY);
-                    if(indexX < chessBoard.getBoard().length && indexY < chessBoard.getBoard()[0].length && isValidMove) {
-                        if(indexX != activePieceOldCoords.x || indexY != activePieceOldCoords.y){
-                            posX = indexX*squareLength;
-                            posY = indexY*squareLength;
-                            activePiece.setPos(posX, posY);
-                            chessBoard.setPiece(indexX,indexY,activePiece);
-                            chessBoard.setPiece(activePieceOldCoords.x,activePieceOldCoords.y,null);
-                            activePiece = null;
+                    boolean isValidMove = chessMaster.isValidMove(activePieceViewCoords.x, activePieceViewCoords.y, indexX, indexY);
 
-                            if(currentTurn == PieceColor.WHITE) {
-                                //CHECK FOR CHECKMATE DOWN IN THIS IF STATEMENT
-                                if(true){
-                                    currentTurn = PieceColor.BLACK;
-                                } else {
-                                    //Reset Game here
-                                    Log.i("Checkmate! WHITE WINS", "Checkmate! WHITE WINS");
-                                }
-                            } else {
-                                //CHECK FOR CHECKMATE DOWN IN THIS IF STATEMENT
-                                if(true){
-                                    currentTurn = PieceColor.WHITE;
-                                } else {
-                                    //Reset Game here
-                                    Log.i("Checkmate! BLACK WINS", "Checkmate! BLACK WINS");
-                                }
-
-                            }
-                        }
+                    if(isValidMove) {
+                        stateOfGame = chessMaster.makeMove(activePieceViewCoords.x, activePieceViewCoords.y, indexX, indexY);
+                        currentTurn = stateOfGame.getCurrentTurn();
+                        chessBoardView = stateOfGame.getChessBoardView();
+                        chessBoardView.getPiece(indexX, indexY).setPos(indexX*squareLength, indexY*squareLength);
+                        holdingPiece.setPos(indexX*squareLength, indexY*squareLength);
                     } else {
-                        activePiece.setPos(activePieceOldCoords.x*squareLength, activePieceOldCoords.y*squareLength);
-                        activePiece = null;
+                        holdingPiece.setPos(activePieceViewCoords.x*squareLength, activePieceViewCoords.y*squareLength);
+                        holdingPiece = null;
                     }
                 }
                 break;

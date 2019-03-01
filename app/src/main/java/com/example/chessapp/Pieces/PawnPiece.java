@@ -1,13 +1,12 @@
 package com.example.chessapp.Pieces;
 
-import android.content.Context;
 
 import com.example.chessapp.ChessBoard;
 import com.example.chessapp.ChessPiece;
 
 public class PawnPiece extends ChessPiece {
-    public PawnPiece (int resourceId, int squareLength, PieceColor color, Context context, int i, int j){
-        super(resourceId, ChessPiece.Piece.PAWN, color, context, i*squareLength, j*squareLength);
+    public PawnPiece (PieceColor color, int i, int j){
+        super(ChessPiece.Piece.PAWN, color, i, j);
     }
 
     @Override

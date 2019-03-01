@@ -1,13 +1,11 @@
 package com.example.chessapp.Pieces;
 
-import android.content.Context;
-
 import com.example.chessapp.ChessBoard;
 import com.example.chessapp.ChessPiece;
 
 public class RookPiece extends ChessPiece {
-    public RookPiece (int resourceId, int squareLength, PieceColor color, Context context, int i, int j){
-        super(resourceId, ChessPiece.Piece.ROOK, color, context, i*squareLength, j*squareLength);
+    public RookPiece (PieceColor color, int i, int j){
+        super(ChessPiece.Piece.ROOK, color, i, j);
     }
 
     @Override
@@ -20,8 +18,12 @@ public class RookPiece extends ChessPiece {
         ChessPiece movingPiece = chessBoard.getPiece(oldX, oldY);
         ChessPiece targetPiece = chessBoard.getPiece(newX, newY);
 
-        if(movingPiece.getColor() != targetPiece.getColor() && isValidMove(oldX, oldY, newX, newY, chessBoard)) {
-            return true;
+        if(targetPiece != null) {
+            if(movingPiece.getColor() != targetPiece.getColor() && isValidMove(oldX, oldY, newX, newY, chessBoard)) {
+                return true;
+            }
+        } else {
+            return isValidMove(oldX, oldY, newX, newY, chessBoard);
         }
 
         return false;
